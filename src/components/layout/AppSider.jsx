@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ArrowDownOutlined, ArrowUpOutlined } from "@ant-design/icons";
-import { Layout, Card, Statistic, List, Spin } from "antd";
+import { Layout, Card, Statistic, List, Spin, Typography } from "antd";
 import { fakeFetchAssets, fakeFetchCrypto } from "../../api";
 import { percentDiff } from "../../utils";
 const { Sider } = Layout;
@@ -26,8 +26,8 @@ const AppSider = () => {
       const { result } = await fakeFetchCrypto();
 
       assets.map((asset) => {
-        const coin = result.find((o) => o.id === asset.id),
-          totalAmount = asset.amount * coin.price;
+        const coin = result.find((o) => o.id === asset.id);
+        let totalAmount = asset.amount * coin.price;
         return {
           grow: asset.price < coin.price,
           growPercent: percentDiff(asset.price, coin.price),
@@ -50,34 +50,27 @@ const AppSider = () => {
 
   return (
     <Sider width="25%" style={siderStyle}>
-      <Card>
-        <Statistic
-          title="Idle"
-          value={9.3}
-          precision={2}
-          valueStyle={{ color: "#cf1322" }}
-          prefix={<ArrowDownOutlined />}
-          suffix="%"
-        />
-        <List
-          dataSource={data}
-          size="small"
-          renderItem={(item) => (
-            <List.Item>
-              <Card style={{ marginBottom: "1rem" }}>
-                <Statistic
-                  title="Active"
-                  value={11.28}
-                  precision={2}
-                  valueStyle={{ color: "#3f8600" }}
-                  prefix={<ArrowUpOutlined />}
-                  suffix="%"
-                />
-              </Card>
-            </List.Item>
-          )}
-        />
-      </Card>
+      {assets.map((asset) => (
+        <Card key={asset.id}>
+          <Statistic
+            title={asset.id}
+            value={asset.totalAmount}
+            precision={2}
+            valueStyle={{ color: asset.grow ? "#3f8600" : "#cf1322" }}
+            prefix={asset.grow ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+            suffix="%"
+          />
+          <List
+            dataSource={data}
+            size="small"
+            renderItem={(item) => (
+              <List.Item>
+                <Typography />
+              </List.Item>
+            )}
+          />
+        </Card>
+      ))}
     </Sider>
   );
 };
