@@ -1,49 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext } from "react";
 import { ArrowDownOutlined, ArrowUpOutlined } from "@ant-design/icons";
-import { Layout, Card, Statistic, List, Spin, Typography } from "antd";
-import { fakeFetchAssets, fakeFetchCrypto } from "../../api";
-import { percentDiff } from "../../utils";
+import { Layout, Card, Statistic, List, Spin, Typography, Tag } from "antd";
+const { Text } = Typography;
+import { capitalizeFirstSymbol } from "../../utils";
+import CryptoContext from "../../context/crypto-context";
 const { Sider } = Layout;
 const siderStyle = {
   padding: "1rem",
 };
-const data = [
-  "Racing car sprays burning fuel into crowd.",
-  "Japanese princess to wed commoner.",
-  "Australian walks 100km after outback crash.",
-  "Man charged over missing wedding girl.",
-  "Los Angeles battles huge wildfires.",
-];
 
 const AppSider = () => {
-  const [loading, setLoading] = useState(false);
-  const [crypto, setCrypto] = useState([]);
-  const [assets, setAssets] = useState([]);
-  useEffect(() => {
-    async function preload() {
-      setLoading(true);
-      let assets = await fakeFetchAssets();
-      const { result } = await fakeFetchCrypto();
-
-      assets.map((asset) => {
-        const coin = result.find((o) => o.id === asset.id);
-        let totalAmount = asset.amount * coin.price;
-        return {
-          grow: asset.price < coin.price,
-          growPercent: percentDiff(asset.price, coin.price),
-          totalAmount: totalAmount,
-          totalProfit: totalAmount - asset.amount * asset.price,
-          ...asset,
-        };
-      });
-      setAssets(assets);
-      setCrypto(result);
-      setLoading(false);
-    }
-
-    preload();
-  }, []);
-
+  const { loading, assets } = useContext(CryptoContext);
   if (loading) {
     return <Spin fullscreen />;
   }
@@ -51,21 +18,45 @@ const AppSider = () => {
   return (
     <Sider width="25%" style={siderStyle}>
       {assets.map((asset) => (
-        <Card key={asset.id}>
+        <Card key={asset.id} style={{ marginBottom: "1rem" }}>
           <Statistic
-            title={asset.id}
+            title={capitalizeFirstSymbol(asset.id)}
             value={asset.totalAmount}
             precision={2}
             valueStyle={{ color: asset.grow ? "#3f8600" : "#cf1322" }}
             prefix={asset.grow ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-            suffix="%"
+            suffix="$"
           />
           <List
-            dataSource={data}
+            dataSource={[
+              {
+                title: "Totle Profit",
+                value: asset.totalProfit,
+                formatting: "$",
+                withTag: true,
+              },
+              {
+                title: "Asset Amount",
+                value: asset.amount,
+              },
+            ]}
             size="small"
             renderItem={(item) => (
               <List.Item>
-                <Typography />
+                <Text>{item.title}</Text>
+                {item.withTag && (
+                  <Tag color={asset.grow ? "green" : "red"}>
+                    {asset.growPercent}%
+                  </Tag>
+                )}
+                {item.formatting ? (
+                  <Text type={asset.grow ? "success" : "danger"}>
+                    {(+item.value).toFixed(2)}
+                    {item.formatting}
+                  </Text>
+                ) : (
+                  <Text>{item.value}</Text>
+                )}
               </List.Item>
             )}
           />
